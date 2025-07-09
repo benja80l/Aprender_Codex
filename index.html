@@ -24,9 +24,56 @@ body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:20px;background:#f5
 const taskInput=document.getElementById('new-task');
 const addBtn=document.getElementById('add-btn');
 const taskList=document.getElementById('task-list');
-let tasks=JSON.parse(localStorage.getItem('tasks')||'[]');
+let tasks;
+try {
+  tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  if (!Array.isArray(tasks)) tasks = [];
+} catch (e) {
+  tasks = [];
+}
 function save(){localStorage.setItem('tasks',JSON.stringify(tasks))}
-function render(){taskList.innerHTML='';tasks.forEach((t,i)=>{const li=document.createElement('li');if(t.completed)li.classList.add('completed');const cb=document.createElement('input');cb.type='checkbox';cb.checked=t.completed;cb.addEventListener('change',()=>{tasks[i].completed=cb.checked;save();render()});const span=document.createElement('span');span.textContent=t.text;li.appendChild(cb);li.appendChild(span);taskList.appendChild(li)})}
+function render() {
+	// Only update changed elements instead of clearing all
+	// For simplicity, if the number of tasks changes, re-render all
+	if (taskList.children.length !== tasks.length) {
+		taskList.innerHTML = '';
+		tasks.forEach((t, i) => {
+			const li = document.createElement('li');
+			if (t.completed) li.classList.add('completed');
+			const cb = document.createElement('input');
+			cb.type = 'checkbox';
+			cb.checked = t.completed;
+			cb.addEventListener('change', () => {
+				tasks[i].completed = cb.checked;
+				save();
+				render();
+			});
+			const span = document.createElement('span');
+			span.textContent = t.text;
+			li.appendChild(cb);
+			li.appendChild(span);
+			taskList.appendChild(li);
+		});
+	} else {
+		// Update only changed elements
+		tasks.forEach((t, i) => {
+			const li = taskList.children[i];
+			if (t.completed) {
+				li.classList.add('completed');
+			} else {
+				li.classList.remove('completed');
+			}
+			const cb = li.querySelector('input[type="checkbox"]');
+			if (cb.checked !== t.completed) {
+				cb.checked = t.completed;
+			}
+			const span = li.querySelector('span');
+			if (span.textContent !== t.text) {
+				span.textContent = t.text;
+			}
+		});
+	}
+}
 addBtn.addEventListener('click',()=>{const text=taskInput.value.trim();if(text){tasks.push({text,completed:false});taskInput.value='';save();render()}});
 render();
 </script>
