@@ -119,3 +119,27 @@ body {
   color: #222;
   stroke: #222;
 }
+.group-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  height: 24px;
+  padding: 0 10px;
+  margin-right: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #49C3A4;
+  vertical-align: middle;
+  white-space: nowrap;
+  user-select: none;
+  transition: background 0.2s;
+}
+.right-container {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: 8px;
+}

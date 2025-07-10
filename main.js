@@ -39,6 +39,18 @@ function renderizarTareas(tareas) {
     const span = document.createElement('span');
     span.innerHTML = sanitizarTexto(tarea.texto);
 
+    // --- Grupo: etiqueta visual ---
+    const groupColors = {
+      'Estudio': '#547CF4',
+      'Personal': '#49C3A4',
+      'Descanso': '#0D00A4'
+    };
+    const groupName = tarea.grupo || 'Personal'; // Default group if not set
+    const groupLabel = document.createElement('span');
+    groupLabel.className = 'group-label';
+    groupLabel.textContent = groupName;
+    groupLabel.style.backgroundColor = groupColors[groupName] || '#49C3A4';
+
     // Botón de menú (ícono de tres puntos)
     const btnMenu = document.createElement('button');
     btnMenu.className = 'delete-btn';
@@ -136,18 +148,25 @@ function renderizarTareas(tareas) {
       renderizarTareas(tareas);
     });
 
+    // --- Estructura visual: checkbox, texto, grupo, menú ---
     li.appendChild(checkbox);
     li.appendChild(span);
-    li.appendChild(btnMenu);
+    // Contenedor para grupo y menú
+    const rightContainer = document.createElement('div');
+    rightContainer.className = 'right-container';
+    rightContainer.appendChild(groupLabel);
+    rightContainer.appendChild(btnMenu);
+    li.appendChild(rightContainer);
     lista.appendChild(li);
   });
 }
 
 // Valida y agrega una nueva tarea
-function agregarTarea(tareas, texto) {
+function agregarTarea(tareas, texto, grupo) {
   const textoLimpio = texto.trim();
   if (!textoLimpio) return false;
-  tareas.push({ texto: textoLimpio, completada: false });
+  const grupoValido = ['Estudio', 'Personal', 'Descanso'].includes(grupo) ? grupo : 'Personal';
+  tareas.push({ texto: textoLimpio, completada: false, grupo: grupoValido });
   guardarTareas(tareas);
   renderizarTareas(tareas);
   return true;
@@ -159,9 +178,24 @@ document.addEventListener('DOMContentLoaded', function inicializarToDoApp() {
   const botonAgregar = document.getElementById('add-btn');
   let tareas = obtenerTareas();
 
+  // --- Selector de grupo ---
+  let selectorGrupo = document.getElementById('group-select');
+  if (!selectorGrupo) {
+    selectorGrupo = document.createElement('select');
+    selectorGrupo.id = 'group-select';
+    ['Estudio', 'Personal', 'Descanso'].forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g;
+      opt.textContent = g;
+      selectorGrupo.appendChild(opt);
+    });
+    inputTarea.parentNode.insertBefore(selectorGrupo, botonAgregar);
+  }
+
   botonAgregar.addEventListener('click', () => {
-    if (agregarTarea(tareas, inputTarea.value)) {
+    if (agregarTarea(tareas, inputTarea.value, selectorGrupo.value)) {
       inputTarea.value = '';
+      selectorGrupo.value = 'Personal';
     }
   });
 
