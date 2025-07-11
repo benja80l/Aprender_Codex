@@ -39,7 +39,7 @@ function renderizarTareas(tareas) {
     const span = document.createElement('span');
     span.innerHTML = sanitizarTexto(tarea.texto);
 
-    // --- Grupo: etiqueta visual o select ---
+    // --- Grupo: etiqueta visual o menú contextual ---
     const groupColors = {
       'Estudio': '#547CF4',
       'Personal': '#49C3A4',
@@ -47,10 +47,11 @@ function renderizarTareas(tareas) {
     };
     const groupName = tarea.grupo || 'Personal';
     let groupLabel;
-    let groupSelect;
+    let groupMenu;
     let groupLabelContainer = document.createElement('div');
     groupLabelContainer.style.display = 'flex';
     groupLabelContainer.style.alignItems = 'center';
+    groupLabelContainer.style.position = 'relative';
 
     function showGroupLabel() {
       groupLabel = document.createElement('span');
@@ -61,44 +62,76 @@ function renderizarTareas(tareas) {
       groupLabel.style.cursor = 'pointer';
       groupLabel.addEventListener('click', (e) => {
         e.stopPropagation();
-        showGroupSelect();
+        showGroupMenu();
       });
       groupLabel.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          showGroupSelect();
+          showGroupMenu();
         }
       });
       groupLabelContainer.innerHTML = '';
       groupLabelContainer.appendChild(groupLabel);
     }
 
-    function showGroupSelect() {
-      groupSelect = document.createElement('select');
+    function showGroupMenu() {
+      groupMenu = document.createElement('div');
+      groupMenu.className = 'group-menu-contextual';
+      groupMenu.tabIndex = -1;
+      groupMenu.style.position = 'absolute';
+      groupMenu.style.top = '-8px';
+      groupMenu.style.left = '0';
+      groupMenu.style.zIndex = '200';
+      groupMenu.style.minWidth = '120px';
+      groupMenu.style.background = '#F5F5F5';
+      groupMenu.style.border = '1px solid #ccc';
+      groupMenu.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+      groupMenu.style.borderRadius = '8px';
+      groupMenu.style.padding = '8px 0';
+      groupMenu.style.display = 'flex';
+      groupMenu.style.flexDirection = 'column';
       ['Estudio', 'Personal', 'Descanso'].forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g;
+        const opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'group-menu-option';
         opt.textContent = g;
-        if (g === groupName) opt.selected = true;
-        groupSelect.appendChild(opt);
+        opt.style.background = groupColors[g];
+        opt.style.color = '#fff';
+        opt.style.border = 'none';
+        opt.style.borderRadius = '6px';
+        opt.style.margin = '4px 12px';
+        opt.style.padding = '6px 0';
+        opt.style.fontWeight = '600';
+        opt.style.fontSize = '15px';
+        opt.style.cursor = 'pointer';
+        opt.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)';
+        if (g === groupName) {
+          opt.style.outline = '2px solid #ccc';
+        }
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          tareas[indice].grupo = g;
+          guardarTareas(tareas);
+          renderizarTareas(tareas);
+        });
+        groupMenu.appendChild(opt);
       });
-      groupSelect.className = 'group-select-inline';
-      groupSelect.addEventListener('change', (e) => {
-        tareas[indice].grupo = groupSelect.value;
-        guardarTareas(tareas);
-        renderizarTareas(tareas);
-      });
-      groupSelect.addEventListener('blur', () => {
-        showGroupLabel();
-      });
-      groupSelect.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+      // Cierra el menú al hacer click fuera
+      setTimeout(() => {
+        document.addEventListener('mousedown', closeMenuOnClickOutside);
+      }, 0);
+      function closeMenuOnClickOutside(e) {
+        if (!groupMenu.contains(e.target)) {
+          document.removeEventListener('mousedown', closeMenuOnClickOutside);
           showGroupLabel();
         }
+      }
+      groupMenu.addEventListener('blur', () => {
+        setTimeout(() => showGroupLabel(), 100);
       });
       groupLabelContainer.innerHTML = '';
-      groupLabelContainer.appendChild(groupSelect);
-      groupSelect.focus();
+      groupLabelContainer.appendChild(groupMenu);
+      groupMenu.focus();
     }
 
     showGroupLabel();
